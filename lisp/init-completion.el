@@ -321,9 +321,9 @@ targets."
 (use-package corfu
   :custom
   (corfu-auto t)
-  (corfu-auto-prefix 2)
+  ;; (corfu-auto-prefix 2)
   (corfu-preview-current nil)
-  (corfu-auto-delay 0.2)
+  ;; (corfu-auto-delay 0.2)
   (corfu-popupinfo-delay '(0.4 . 0.2))
   :custom-face
   (corfu-border ((t (:inherit region :background unspecified))))
