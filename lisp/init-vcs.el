@@ -267,6 +267,9 @@
 ;; Git configuration modes
 (use-package git-modes)
 
+;; Also load ahg
+(require 'ahg)
+
 (provide 'init-vcs)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
