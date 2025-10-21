@@ -92,7 +92,6 @@
          ("C-c M-x" . consult-mode-command)
          ("C-c h"   . consult-history)
          ("C-c k"   . consult-kmacro)
-         ("C-c m"   . consult-man)
          ("C-c i"   . consult-info)
          ("C-c r"   . consult-ripgrep)
          ("C-c T"   . consult-theme)
@@ -319,8 +318,8 @@ targets."
 
 ;; Auto completion
 (use-package corfu
-  :autoload corfu-quit consult-completion-in-region
-  :functions persistent-scratch-save corfu-move-to-minibuffer
+  :autoload (corfu-quit consult-completion-in-region)
+  :functions (persistent-scratch-save corfu-move-to-minibuffer)
   :custom
   (corfu-auto t)
   (corfu-auto-prefix 2)
