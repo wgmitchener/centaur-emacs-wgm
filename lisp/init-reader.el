@@ -1,6 +1,6 @@
 ;; init-reader.el --- Initialize readers.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2019-2025 Vincent Zhang
+;; Copyright (C) 2019-2026 Vincent Zhang
 
 ;; Author: Vincent Zhang <seagle0128@gmail.com>
 ;; URL: https://github.com/seagle0128/.emacs.d
@@ -32,8 +32,6 @@
 
 (eval-when-compile
   (require 'init-const))
-
-(bind-key "M-<f7>" #'centaur-read-mode)
 
 ;; PDF reader
 (when (display-graphic-p)
@@ -69,9 +67,10 @@
 ;; Epub reader
 (use-package nov
   :mode ("\\.epub\\'" . nov-mode)
-  :hook (nov-mode . my-nov-setup)
+  :hook (nov-mode . my/nov-setup)
+  :bind ("M-<f7>" . centaur-read-mode)
   :init
-  (defun my-nov-setup ()
+  (defun my/nov-setup ()
     "Setup `nov-mode' for better reading experience."
     (visual-line-mode 1)
     (centaur-read-mode)
@@ -80,14 +79,14 @@
   (with-no-warnings
     ;; WORKAROUND: errors while opening `nov' files with Unicode characters
     ;; @see https://github.com/wasamasa/nov.el/issues/63
-    (defun my-nov-content-unique-identifier (content)
+    (defun my/nov-content-unique-identifier (content)
       "Return the the unique identifier for CONTENT."
       (let* ((name (nov-content-unique-identifier-name content))
              (selector (format "package>metadata>identifier[id='%s']"
                                (regexp-quote name)))
              (id (car (esxml-node-children (esxml-query selector content)))))
         (and id (intern id))))
-    (advice-add #'nov-content-unique-identifier :override #'my-nov-content-unique-identifier))
+    (advice-add #'nov-content-unique-identifier :override #'my/nov-content-unique-identifier))
 
   ;; Fix encoding issue on Windows
   (when sys/win32p
@@ -125,7 +124,6 @@
          :map elfeed-search-mode-map
          ("h" . elfeed-hydra/body)
          ("?" . elfeed-hydra/body))
-  :hook (elfeed-show-mode . centaur-read-mode)
   :init (setq url-queue-timeout 30
               elfeed-db-directory (locate-user-emacs-file ".elfeed")
               elfeed-show-entry-switch #'pop-to-buffer
@@ -153,7 +151,7 @@
             ((member "github" tags) (nerd-icons-faicon "nf-fa-github"))
             (t (nerd-icons-faicon "nf-fae-feedly" :face '(:foreground "#2AB24C")))))
 
-    (defun my-elfeed-search-print-entry (entry)
+    (defun my/elfeed-search-print-entry (entry)
       "Print ENTRY to the buffer."
       (let* ((date (elfeed-search-format-date (elfeed-entry-date entry)))
              (date-width (car (cdr elfeed-search-date-format)))
@@ -187,7 +185,7 @@
                   (propertize feed-title 'face 'elfeed-search-feed-face) " "))
         (when tags (insert "(" tags-str ")"))))
 
-    (setq  elfeed-search-print-entry-function #'my-elfeed-search-print-entry))
+    (setq  elfeed-search-print-entry-function #'my/elfeed-search-print-entry))
 
   ;; Use xwidget if possible
   (when (xwidget-workable-p)
@@ -196,16 +194,15 @@
              ("%" . elfeed-webkit-toggle))
       :config
       ;; Fix incorrect keymap after disabling webkit
-      (defun my-elfeed-webkit-reset-keymap ()
+      (defun my/elfeed-webkit-reset-keymap ()
         "Reset local keymap."
         (use-local-map elfeed-show-mode-map))
-      (advice-add #'elfeed-webkit--disable :after #'my-elfeed-webkit-reset-keymap))))
+      (advice-add #'elfeed-webkit--disable :after #'my/elfeed-webkit-reset-keymap))))
 
 ;; Another Atom/RSS reader
 (use-package newsticker
   :ensure nil
   :bind ("C-x J" . newsticker-show-news)
-  :hook (newsticker-treeview-item-mode . centaur-read-mode)
   :init (setq newsticker-url-list
               '(("Planet Emacslife" "https://planet.emacslife.com/atom.xml")
                 ("Mastering Emacs" "http://www.masteringemacs.org/feed/")

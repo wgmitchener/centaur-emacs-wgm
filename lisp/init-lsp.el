@@ -1,6 +1,6 @@
 ;; init-lsp.el --- Initialize LSP configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2025 Vincent Zhang
+;; Copyright (C) 2018-2026 Vincent Zhang
 
 ;; Author: Vincent Zhang <seagle0128@gmail.com>
 ;; URL: https://github.com/seagle0128/.emacs.d
@@ -44,10 +44,9 @@
                                     'ron-mode)
                              (eglot-ensure))))
             ((markdown-mode yaml-mode yaml-ts-mode) . eglot-ensure))
-     :init
-     (setq eglot-autoshutdown t
-           eglot-events-buffer-size 0
-           eglot-send-changes-idle-time 0.5))
+     :init (setq eglot-autoshutdown t
+                 eglot-events-buffer-config '(:size 0 :format 'short)
+                 eglot-send-changes-idle-time 0.5))
 
    (use-package consult-eglot
      :after consult eglot
@@ -114,25 +113,25 @@
 
      (with-no-warnings
        ;; Disable `lsp-mode' in `git-timemachine-mode'
-       (defun my-lsp--init-if-visible (fn &rest args)
+       (defun my/lsp--init-if-visible (fn &rest args)
          (unless (bound-and-true-p git-timemachine-mode)
            (apply fn args)))
-       (advice-add #'lsp--init-if-visible :around #'my-lsp--init-if-visible)
+       (advice-add #'lsp--init-if-visible :around #'my/lsp--init-if-visible)
 
        ;; Enable `lsp-mode' in sh/bash/zsh
-       (defun my-lsp-bash-check-sh-shell (&rest _)
+       (defun my/lsp-bash-check-sh-shell (&rest _)
          (and (memq major-mode '(sh-mode bash-ts-mode))
               (memq sh-shell '(sh bash zsh))))
-       (advice-add #'lsp-bash-check-sh-shell :override #'my-lsp-bash-check-sh-shell)
+       (advice-add #'lsp-bash-check-sh-shell :override #'my/lsp-bash-check-sh-shell)
        (add-to-list 'lsp-language-id-configuration '(bash-ts-mode . "shellscript"))
 
        ;; Display icons
        (when (icons-displayable-p)
-         (defun my-lsp-icons-get-by-file-ext (file-ext &optional feature)
+         (defun my/lsp-icons-get-by-file-ext (file-ext &optional feature)
            (when (and file-ext
                       (lsp-icons--enabled-for-feature feature))
              (nerd-icons-icon-for-extension file-ext)))
-         (advice-add #'lsp-icons-get-by-file-ext :override #'my-lsp-icons-get-by-file-ext)
+         (advice-add #'lsp-icons-get-by-file-ext :override #'my/lsp-icons-get-by-file-ext)
 
          (defvar lsp-symbol-alist
            '((misc          nerd-icons-codicon "nf-cod-symbol_namespace" :face font-lock-warning-face)
@@ -156,13 +155,13 @@
              (operator      nerd-icons-codicon "nf-cod-symbol_operator" :face font-lock-comment-delimiter-face)
              (template      nerd-icons-codicon "nf-cod-symbol_snippet" :face font-lock-type-face)))
 
-         (defun my-lsp-icons-get-by-symbol-kind (kind &optional feature)
+         (defun my/lsp-icons-get-by-symbol-kind (kind &optional feature)
            (when (and kind
                       (lsp-icons--enabled-for-feature feature))
              (let* ((icon (cdr (assoc (lsp-treemacs-symbol-kind->icon kind) lsp-symbol-alist)))
                     (args (cdr icon)))
                (apply (car icon) args))))
-         (advice-add #'lsp-icons-get-by-symbol-kind :override #'my-lsp-icons-get-by-symbol-kind)
+         (advice-add #'lsp-icons-get-by-symbol-kind :override #'my/lsp-icons-get-by-symbol-kind)
 
          (setq lsp-headerline-arrow (nerd-icons-octicon "nf-oct-chevron_right"
                                                         :face 'lsp-headerline-breadcrumb-separator-face)))))
@@ -227,7 +226,8 @@
             ("s-<return>" . lsp-ui-sideline-apply-code-actions)
             ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
             ([remap xref-find-references] . lsp-ui-peek-find-references))
-     :hook (lsp-mode . lsp-ui-mode)
+     :hook ((lsp-mode . lsp-ui-mode)
+            (after-load-theme . lsp-ui-set-doc-border))
      :init
      (setq lsp-ui-sideline-show-diagnostics nil
            lsp-ui-sideline-ignore-duplicate t
@@ -239,12 +239,11 @@
                                  ,(face-foreground 'font-lock-constant-face)
                                  ,(face-foreground 'font-lock-variable-name-face)))
      ;; Set correct color to borders
-     (defun my-lsp-ui-doc-set-border ()
+     (defun lsp-ui-set-doc-border ()
        "Set the border color of lsp doc."
        (setq lsp-ui-doc-border
              (face-background 'posframe-border nil t)))
-     (my-lsp-ui-doc-set-border)
-     (add-hook 'after-load-theme-hook #'my-lsp-ui-doc-set-border t)
+     (lsp-ui-set-doc-border)
      :config
      (with-no-warnings
        ;; Display peek in child frame if possible
@@ -277,7 +276,7 @@
        (advice-add #'lsp-ui-peek--peek-hide :around #'lsp-ui-peek--peek-destroy)
 
        ;; Handle docs
-       (defun my-lsp-ui-doc--handle-hr-lines nil
+       (defun my/lsp-ui-doc--handle-hr-lines nil
          (let (bolp next before after)
            (goto-char 1)
            (while (setq next (next-single-property-change (or next 1) 'markdown-hr))
@@ -299,7 +298,7 @@
                  ;; :align-to is added here too
                  (propertize " " 'display '(space :height (1)))
                  (and (not (equal after ?\n)) (propertize " \n" 'face '(:height 0.5)))))))))
-       (advice-add #'lsp-ui-doc--handle-hr-lines :override #'my-lsp-ui-doc--handle-hr-lines)))
+       (advice-add #'lsp-ui-doc--handle-hr-lines :override #'my/lsp-ui-doc--handle-hr-lines)))
 
    ;; `lsp-mode' and `treemacs' integration
    (use-package lsp-treemacs
@@ -509,12 +508,12 @@
      (with-no-warnings
        ;; FIXME: fail to call ccls.xref
        ;; @see https://github.com/emacs-lsp/emacs-ccls/issues/109
-       (cl-defmethod my-lsp-execute-command
+       (cl-defmethod my/lsp-execute-command
          ((_server (eql ccls)) (command (eql ccls.xref)) arguments)
          (when-let* ((xrefs (lsp--locations-to-xref-items
                              (lsp--send-execute-command (symbol-name command) arguments))))
            (xref--show-xrefs xrefs nil)))
-       (advice-add #'lsp-execute-command :override #'my-lsp-execute-command)))
+       (advice-add #'lsp-execute-command :override #'my/lsp-execute-command)))
 
    ;; Swift
    (use-package lsp-sourcekit)

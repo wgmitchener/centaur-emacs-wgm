@@ -1,6 +1,6 @@
 ;; init-dired.el --- Initialize dired configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2006-2025 Vincent Zhang
+;; Copyright (C) 2006-2026 Vincent Zhang
 
 ;; Author: Vincent Zhang <seagle0128@gmail.com>
 ;; URL: https://github.com/seagle0128/.emacs.d
@@ -78,21 +78,22 @@
 
   ;; Colorful dired
   (use-package diredfl
-    :hook (dired-mode . diredfl-mode))
+    :diminish
+    :hook dired-mode)
 
   ;; Shows icons in dired
   (use-package nerd-icons-dired
     :diminish
-    :functions (nerd-icons-icon-for-dir my-nerd-icons-icon-for-dir)
-    :hook (dired-mode . nerd-icons-dired-mode)
+    :functions (nerd-icons-icon-for-dir my/nerd-icons-icon-for-dir)
+    :hook dired-mode
     :init
     (defface nerd-icons-dired-dir-face
       '((t (:inherit 'font-lock-doc-face)))
       "Face for the directory icon."
       :group 'nerd-icons-faces)
-    (defun my-nerd-icons-icon-for-dir (dir)
+    (defun my/nerd-icons-icon-for-dir (dir)
       (nerd-icons-icon-for-dir dir :face 'nerd-icons-dired-dir-face))
-    (setq nerd-icons-dired-dir-icon-function #'my-nerd-icons-icon-for-dir))
+    (setq nerd-icons-dired-dir-icon-function #'my/nerd-icons-icon-for-dir))
 
   ;; Extra Dired functionality
   (use-package dired-aux :ensure nil)
