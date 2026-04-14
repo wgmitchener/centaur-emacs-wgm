@@ -98,8 +98,8 @@
 
   ;; For compilation buffers
   (setq compilation-environment '("TERM=xterm-256color"))
-  (defun my/advice-compilation-filter (f proc string)
-    (funcall f proc
+  (defun my/advice-compilation-filter (fn proc string)
+    (funcall fn proc
              (if (eq major-mode 'rg-mode) ; compatible with `rg'
                  string
                (xterm-color-filter string))))
@@ -126,6 +126,13 @@
           shell-pop--window nil
           shell-pop--frame nil))
 
+  (defun shell-pop--reset-cursor-point ()
+    "Reset cursor point."
+    (with-current-buffer shell-pop--buffer
+      (goto-char (point-max))
+      (when (fboundp 'vterm-reset-cursor-point)
+        (vterm-reset-cursor-point))))
+
   (defun shell-pop--shell (&optional arg)
     "Run shell and return the buffer."
     (setq shell-pop--buffer
@@ -135,6 +142,7 @@
                 (t (shell))))
     (when (and shell-pop--buffer
                (buffer-live-p shell-pop--buffer))
+      (shell-pop--reset-cursor-point)
       (setq shell-pop--window (get-buffer-window shell-pop--buffer))
       (add-hook 'kill-buffer-hook #'shell-pop--reset t)))
 
@@ -184,9 +192,9 @@
         ;; Create shell
         (shell-pop--shell)
 
-        (when (and shell-pop--buffer
-                   (buffer-live-p shell-pop--buffer))
+        (when (and shell-pop--buffer (buffer-live-p shell-pop--buffer))
           (shell-pop--hide-window)
+
           ;; Pop shell in child frame
           (setq shell-pop--frame
                 (posframe-show
@@ -208,14 +216,17 @@
                  :tty-non-selected-cursor t
                  :accept-focus t))
 
+          ;; Delete the child frames of `shell-pop--frame'
+          (when (and shell-pop--frame (frame-live-p shell-pop--frame))
+            (dolist (frame (frame-list))
+              (when (eq (frame-parent frame) shell-pop--frame)
+                (delete-frame frame))))
+
           ;; Focus in child frame
           (select-frame-set-input-focus shell-pop--frame)
 
           ;; Set cursor to the last
-          (with-current-buffer shell-pop--buffer
-            (goto-char (point-max))
-            (when (fboundp 'vterm-reset-cursor-point)
-              (vterm-reset-cursor-point)))))))
+          (shell-pop--reset-cursor-point)))))
 
   (defun shell-pop-toggle ()
     "Toggle shell in a split window or child frame."
